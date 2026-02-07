@@ -39,8 +39,54 @@ io.on("connection",(socket)=>{
         rooms.get(roomId).add(userName);
 
         io.to(roomId).emit("userJoined", Array.from(rooms.get(currentRoom)));
-        console.log("user Joined", roomId);
+        // console.log("user Joined", roomId);
     });
+    socket.on("codeChange",({roomId,code})=>{
+        socket.to(roomId).emit("codeUpdate",code); 
+    });
+
+    socket.on("leaveRoom", () => {
+    if (currentRoom && rooms.has(currentRoom)) {
+        rooms.get(currentRoom).delete(currentUser);
+
+        io.to(currentRoom).emit(
+            "userJoined",
+            Array.from(rooms.get(currentRoom))
+        );
+
+        if (rooms.get(currentRoom).size === 0) {
+            rooms.delete(currentRoom);
+        }
+    }
+
+    socket.leave(currentRoom);
+    currentRoom = null;
+    currentUser = null;
+});
+
+
+    socket.on("typing",({roomId,userName})=>{
+        socket.to(roomId).emit("userTyping",userName);
+    });
+
+
+    socket.on("disconnect", () => {
+    if (currentRoom && rooms.has(currentRoom)) {
+        rooms.get(currentRoom).delete(currentUser);
+
+        io.to(currentRoom).emit(
+            "userJoined",
+            Array.from(rooms.get(currentRoom))
+        );
+
+        if (rooms.get(currentRoom).size === 0) {
+            rooms.delete(currentRoom);
+        }
+    }
+
+    console.log("user disconnected", socket.id);
+});
+
 });
 
 
