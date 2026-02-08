@@ -2,7 +2,6 @@ import React from 'react'
 import './App.css';
 import io from 'socket.io-client'
 import { useState } from 'react';
-import { use } from 'react';
 import Editor from "@monaco-editor/react";
 import { useEffect } from 'react';
 
@@ -13,7 +12,7 @@ const App = () => {
   const [roomId, setRoomId] = useState("");
   const [userName, setUserName] = useState("");
   const [language, setLanguage] = useState("javascript");
-  const [code,setCode] = useState("");
+  const [code,setCode] = useState("// Write Code Here");
   const [copySuccess, setCopySuccess] = useState("");
   const [users, setUsers] = useState([]);
   const [typing, setTyping] = useState("");
@@ -32,10 +31,15 @@ const App = () => {
       setTimeout(()=> setTyping(""),2000);
     });
 
+    socket.on("languageUpdate",(newLanguage)=>{
+      setLanguage(newLanguage);
+    });
+
     return () =>{
       socket.off("userJoined");
       socket.off("codeUpdate");
       socket.off("userTyping");
+      socket.off("languageUpdate");
     };
   },[]);
 
@@ -57,6 +61,15 @@ const App = () => {
       setJoined(true);
     }
   }
+
+  const leaveRoom = () =>{
+    socket.emit("leaveRoom");
+    setJoined(false);
+    setRoomId("");
+    setUserName("");
+    setCode("// Write Code Here");
+    setLanguage("javascript");
+  }
   
   const copyRoomId = ()=>{
     navigator.clipboard.writeText(roomId);
@@ -67,6 +80,12 @@ const App = () => {
     setCode(newCode);
     socket.emit("codeChange",{roomId, code:newCode});
     socket.emit("typing",{roomId,userName});
+  }
+
+  const handleLanguageChange = e => {
+     const newLanguage = e.target.value;
+     setLanguage(newLanguage);
+     socket.emit("languageChange",{roomId,language : newLanguage});
   }
 
 
@@ -106,13 +125,13 @@ const App = () => {
           }
         </ul>
         <p className='typing-indicator'>{typing}</p>
-        <select className="language-selector" value={language} onChange={(e)=> setLanguage(e.target.value)}>
+        <select className="language-selector" value={language} onChange={handleLanguageChange}>
           <option value="javascript">JavaScript</option>
           <option value="python">Python</option>
           <option value="java">Java</option>
           <option value="cpp">C++</option>
         </select>
-        <button className='leave-button'>Leave Room</button>
+        <button className='leave-button' onClick={leaveRoom}>Leave Room</button>
       </div>
     </div>
     <div className="editor-wrapper">
