@@ -6,7 +6,7 @@ import Editor from "@monaco-editor/react";
 import { useEffect } from 'react';
 
 
-const socket = io("http://localhost:3001");
+const socket = io("https://codesync-492y.onrender.com");
 const App = () => {
   const [joined,setJoined] = useState(false);
   const [roomId, setRoomId] = useState("");
