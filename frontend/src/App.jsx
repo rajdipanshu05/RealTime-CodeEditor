@@ -5,8 +5,8 @@ import { useState } from "react";
 import Editor from "@monaco-editor/react";
 import { useEffect } from "react";
 
-// const socket = io("https://codesync-492y.onrender.com");
-const socket = io("http://localhost:3001");
+const socket = io("https://codesync-492y.onrender.com");
+// const socket = io("http://localhost:3001");
 
 const App = () => {
   const [joined, setJoined] = useState(false);
