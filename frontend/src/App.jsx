@@ -42,15 +42,16 @@ const App = () => {
     //   setOutPut(response.run.output);
     // });
     socket.on("codeResponse", (response) => {
-      if (response.data.stderr) {
-        console.log(response.data.stderr);
-      }
-      else if (response.data.compile_output) {
-        console.log(response.data.compile_output);
-      }
-      else {
-        console.log(response.data.stdout);
-      }
+      // if (response.data.stderr) {
+      //   console.log(response.data.stderr);
+      // }
+      // else if (response.data.compile_output) {
+      //   console.log(response.data.compile_output);
+      // }
+      // else {
+      //   console.log(response.data.stdout);
+      // }
+      setOutPut(response.data.stdout);
     });
 
     return () => {
