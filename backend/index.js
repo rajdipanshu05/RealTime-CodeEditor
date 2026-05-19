@@ -195,24 +195,85 @@ io.on("connection", (socket) => {
     io.to(roomId).emit("languageUpdate", language);
   });
 
-  socket.on("compileCode",async({code,roomId,language,version})=>{
-      if(rooms.has(roomId)){
-        const room = rooms.get(roomId);
-        const response = await axios.post("https://emkc.org/api/v2/piston/execute",{
-            language,
-            version,
-            files:[
-                {
-                    content:code
-                }
-            ]
-        });
+  // socket.on("compileCode",async({code,roomId,language,version})=>{
+  //     if(rooms.has(roomId)){
+  //       const room = rooms.get(roomId);
+  //       const response = await axios.post("https://emkc.org/api/v2/piston/execute",{
+  //           language,
+  //           version,
+  //           files:[
+  //               {
+  //                   content:code
+  //               }
+  //           ]
+  //       });
 
-        room.output = response.data.run.output;
-        io.to(roomId).emit("codeResponse",response.data);
+  //       room.output = response.data.run.output;
+  //       io.to(roomId).emit("codeResponse",response.data);
+  //     }
+  //   });
+
+
+
+  socket.on("compileCode", async ({ code, roomId, language }) => {
+  try {
+
+    if (!rooms.has(roomId)) return;
+
+    const room = rooms.get(roomId);
+
+    // Judge0 language ids
+    const languageMap = {
+      javascript: 63,
+      python: 71,
+      java: 62,
+      cpp: 54,
+    };
+
+    const response = await axios.post(
+      "https://ce.judge0.com/submissions?base64_encoded=false&wait=true",
+      {
+        language_id: languageMap[language],
+        source_code: code,
       }
+    );
+
+    let output = "";
+
+    // runtime error
+    if (response.data.stderr) {
+      output = response.data.stderr;
+    }
+
+    // compilation error
+    else if (response.data.compile_output) {
+      output = response.data.compile_output;
+    }
+
+    // success output
+    else {
+      output = response.data.stdout;
+    }
+
+    room.output = output;
+
+    io.to(roomId).emit("codeResponse", {
+      output,
+      status: response.data.status.description,
+      memory: response.data.memory,
+      time: response.data.time,
     });
 
+  } catch (error) {
+
+    console.log(error.response?.data || error.message);
+
+    io.to(roomId).emit("codeResponse", {
+      output: "Code execution failed",
+      status: "Error",
+    });
+  }
+});
 
 
   // ================= LEAVE ROOM =================
